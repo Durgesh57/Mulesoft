@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<flow name="Contact_SF_To_MysqlFlow" doc:id="98333c71-a13a-43f3-a7bd-d1b7a1345336" >
+		<http:listener doc:name="Listener" doc:id="e6b95baa-53ca-4e57-996f-6f2ea730b3ab" config-ref="HTTP_Listener_config" path="contactSF"/>
+		<salesforce:query-all doc:name="Query all" doc:id="f6518c4f-83f9-4c92-8c63-f2972322493e" config-ref="Salesforce_Config">
+			<salesforce:salesforce-query ><![CDATA[SELECT AccountID__c, Emaill__c, External_Pulse_ID__c, ID__c, Name__c, OwnerId__c FROM contact where ID__c != NULL]]></salesforce:salesforce-query>
+		</salesforce:query-all>
+		<ee:transform doc:name="Transform Message" doc:id="37ef9d94-292a-4085-859c-0b90fa80eb74" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map ( payload01 , indexOfPayload01 ) -> {
+	clientCorporationID: payload01.AccountID__c default "",
+	externalID: payload01.ID__c default "",
+	email: payload01.Emaill__c default "",
+	recruiterUserID: payload01.OwnerId__c default "",
+	name: payload01.Name__c default "",
+	id: payload01.External_Pulse_ID__c default ""
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="df7659c2-d198-4a4a-9ec4-1a418f4aa2c3" message="#[payload]"/>
+		<db:bulk-insert doc:name="Bulk insert" doc:id="18c4e9bc-dc0c-45e2-ad6b-73ae15c89fff" config-ref="Database_Config">
+			<db:sql ><![CDATA[INSERT INTO BH_DContact(clientCorporationID, externalID, email, recruiterUserID, name , id) VALUES(:clientCorporationID, :externalID, :email, :recruiterUserID, :name , :id)]]></db:sql>
+		</db:bulk-insert>
+		<logger level="INFO" doc:name="Logger" doc:id="01b212d8-f2c6-4df2-915e-bb81139d9add" message="#[payload]"/>
+	</flow>
+</mule>

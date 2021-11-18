@@ -1,0 +1,19 @@
+[
+{
+	clientCorporationID : '0015gOOOOOWqUHIAAN',
+	externalID : '0015g000WqUHIAAN',
+	email : 'first@gmail.com',
+	recruiterUserID : '0012gOOOOWqUHIAAN',
+	name : 'First',
+	id : 'a11'
+},
+{
+	clientCorporationID : '0015gOOOOOWqUHIABB',
+	externalID : '0015g000WqUHIABB',
+	email : 'second@gmail.com',
+	recruiterUserID : '0012gOOOOWqUHIBB',
+	name : 'second',
+	id : 'a12'
+}
+
+]

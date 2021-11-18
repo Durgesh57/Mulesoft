@@ -1,0 +1,12 @@
+[
+	{
+		'name' : "Hotel",
+		'externalID' : '555',
+		'id' : 'x5'
+	},
+	{
+		'name' : 'Airport',
+		'externalID' : '666',
+		'id' : 'x6'
+	}
+]

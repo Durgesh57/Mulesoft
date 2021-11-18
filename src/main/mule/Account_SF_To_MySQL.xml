@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<flow name="Account_SF_To_MySQLFlow" doc:id="bc299078-cd59-4247-ba33-d025490d59c9" >
+		<http:listener doc:name="Listener" doc:id="69e9d44d-c3fe-4d8e-a491-2575d77255d7" config-ref="HTTP_Listener_config" path="sf"/>
+		<salesforce:query-all doc:name="RetrieveAccountFromSF" doc:id="dcbec1ab-884e-4d40-885b-68194bcaff07" config-ref="Salesforce_Config">
+			<salesforce:salesforce-query ><![CDATA[SELECT Name__c, Id__c, External_Pulse_ID__c FROM account where Name__c != Null]]></salesforce:salesforce-query>
+		</salesforce:query-all>
+		<ee:transform doc:name="Transform Message" doc:id="c4b41b38-74ac-4456-bcd1-c87ea16c002d" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map ( payload01 , indexOfPayload01 ) -> {
+	name: payload01.Name__c default "",
+	externalID: payload01.Id__c default "",
+	id: payload01.External_Pulse_ID__c default ""
+}
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="3bbe15cd-d313-41ed-ad17-bc260b98c40d" >
+			<flow-ref doc:name="Flow Reference" doc:id="6daba388-1feb-416d-8b01-e6149b567e17" name="Account_SF_To_MySQLSub_Flow"/>
+		</foreach>
+		<logger level="INFO" doc:name="Logger" doc:id="a3561710-cf68-4496-aa55-b21695f5762b" />
+	</flow>
+	<sub-flow name="Account_SF_To_MySQLSub_Flow" doc:id="d003a8ce-f7ad-456f-ab32-b8a5e87ae6fe" >
+		<db:insert doc:name="Insert" doc:id="f793b72f-a789-4622-b1eb-cf1f316de56c" config-ref="Database_Config">
+				<db:sql><![CDATA[INSERT INTO bh_Durgesh(name, externalID, id) VALUES(:name,:externalID,:id)]]></db:sql>
+				<db:input-parameters><![CDATA[#[payload]]]></db:input-parameters>
+			</db:insert>
+	</sub-flow>
+</mule>

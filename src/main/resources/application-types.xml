@@ -1,0 +1,46 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="Account" format="json">
+      <types:shape format="weave" example="examples/Account.json"><![CDATA[%dw 2.0
+
+type Account = Array<{|  name: String,   externalID: String,   id: String|}> {"example": "[{\\\"name\\\":\\\"Hotel\\\",\\\"externalID\\\":\\\"555\\\",\\\"id\\\":\\\"x5\\\"},{\\\"name\\\":\\\"Airport\\\",\\\"externalID\\\":\\\"666\\\",\\\"id\\\":\\\"x6\\\"}]"}
+
+]]></types:shape>
+    </types:type>
+    <types:type name="Contact" format="json">
+      <types:shape format="weave" example="examples/ContactMetadata.json"><![CDATA[%dw 2.0
+
+type Contact = Array<{|  clientCorporationID: String,   externalID: String,   email: String,   recruiterUserID: String,   name: String,   id: String|}> {"example": "[{\\\"clientCorporationID\\\":\\\"0015gOOOOOWqUHIAAN\\\",\\\"externalID\\\":\\\"0015g000WqUHIAAN\\\",\\\"email\\\":\\\"first@gmail.com\\\",\\\"recruiterUserID\\\":\\\"0012gOOOOWqUHIAAN\\\",\\\"name\\\":\\\"First\\\",\\\"id\\\":\\\"a11\\\"},{\\\"clientCorporationID\\\":\\\"0015gOOOOOWqUHIABB\\\",\\\"externalID\\\":\\\"0015g000WqUHIABB\\\",\\\"email\\\":\\\"second@gmail.com\\\",\\\"recruiterUserID\\\":\\\"0012gOOOOWqUHIBB\\\",\\\"name\\\":\\\"second\\\",\\\"id\\\":\\\"a12\\\"}]"}
+
+]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#c4b41b38-74ac-4456-bcd1-c87ea16c002d">
+    <types:processor-declaration>
+      <types:output-event>
+        <types:message>
+          <types:payload type="Account"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#37ef9d94-292a-4085-859c-0b90fa80eb74">
+    <types:processor-declaration>
+      <types:output-event>
+        <types:message>
+          <types:payload type="Contact"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#e0f23610-6f3f-4827-a49f-d93339fb12b4">
+    <types:processor-declaration>
+      <types:output-event>
+        <types:message>
+          <types:payload type="Contact"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>

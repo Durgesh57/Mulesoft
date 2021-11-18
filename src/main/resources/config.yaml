@@ -1,0 +1,10 @@
+db :
+  host : "mysqlworkato.cehldl5ab55n.us-west-1.rds.amazonaws.com"
+  port : "3306"
+  user : "workato"
+  password : "W0rkat0d8"
+  
+sf:
+  username : "durgeshgoyal571@resourceful-raccoon-oexmly.com"
+  password : "Durgesh@123$"
+  security : "BYnAwuG1uXraqtXizWdzuHeWx"

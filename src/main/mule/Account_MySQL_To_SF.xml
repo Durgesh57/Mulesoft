@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="4bea8bc4-d2c5-403a-b485-42fc5b585e2b" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="AccountscCreatedInSF" doc:id="05ae9e50-b5a7-41c2-8ff7-ab527f17ee32" >
+		<http:listener doc:name="Listener" doc:id="be67538b-9ad0-4de6-9038-57b72104e24b" config-ref="HTTP_Listener_config" path="mysql"/>
+		<db:select doc:name="Retrieve accounts" doc:id="af8b602d-32ed-4221-a3dd-69329d6f2472" config-ref="Database_Config">
+			<db:sql ><![CDATA[SELECT * FROM bh_Durgesh]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="7ec38e5b-57a2-471e-84d8-f54e8d8bbbc2" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map ( payload01 , indexOfPayload01 ) -> {
+	Name__c: payload01.name,
+	Id__c: payload01.externalID,
+	External_Pulse_ID__c: payload01.id
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:upsert objectType="Account" externalIdFieldName="Id" doc:name="Upsert" doc:id="e07c6578-b2f8-40c0-bfd1-85a7c1671acf" config-ref="Salesforce_Config" />
+		<logger level="INFO" doc:name="Logger" doc:id="1196801f-c72f-43db-80ca-55c8bc96214d" message="#[payload]"/>
+	</flow>
+</mule>

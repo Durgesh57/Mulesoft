@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="67bc760c-d800-403e-8e50-520fa0b75274" >
+		<db:my-sql-connection host="${db.host}" port="${db.port}" user="${db.user}" password="${db.password}" database="workato" />
+	</db:config>
+	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="e3a855c8-7bd9-4258-ba87-6b1fdb6f907f" >
+		<salesforce:basic-connection username="${sf.username}" password="${sf.password}" securityToken="${sf.security}" />
+	</salesforce:sfdc-config>
+	<configuration doc:name="Configuration" doc:id="cc9caaf3-665e-49df-9938-6dfb2f67665d" defaultErrorHandler-ref="globalError_Handler" />
+	<configuration-properties doc:name="Configuration properties" doc:id="86866c8e-f3ea-4846-bf0f-d6ed0e6760be" file="config.yaml" />
+	<error-handler name="globalError_Handler" doc:id="e73893cf-d33e-40d0-a6f5-83e6dcbfc55c" >
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="Connectivity error" doc:id="f599a49d-07f9-42c0-9540-d4873dc5b5ab" type="DB:CONNECTIVITY, SALESFORCE:CONNECTIVITY">
+			<ee:transform doc:name="Transform Message" doc:id="6a5e897d-12c7-40d4-94e3-2b6d77105327" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message : "Connection Failed"
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<set-payload value="#[payload]" doc:name="Set Payload" doc:id="b676a83d-bbe1-46a9-a957-357904b6dd3b" />
+		</on-error-propagate>
+		<on-error-continue enableNotifications="true" logException="true" doc:name="Query Error" doc:id="140360ad-5dd4-4f32-8da2-b99db8e5e62a" type="DB:BAD_SQL_SYNTAX, DB:QUERY_EXECUTION">
+			<ee:transform doc:name="Transform Message" doc:id="54f8e531-3478-44bc-8d30-9625b58bd96b" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	message : "Check Query Syntax"
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<set-payload value="#[payload]" doc:name="Set Payload" doc:id="93bfafa3-9b34-416d-8381-1e1c2834cdf6" />
+		</on-error-continue>
+		<on-error-continue enableNotifications="true" logException="true" doc:name="Time limit" doc:id="f1d12bc7-d24b-4ce3-8fa6-43944207fd48" type="SALESFORCE:LIMIT_EXCEEDED">
+			<set-payload value="#[error.detailedDescription]" doc:name="Set Payload" doc:id="77ff0077-c430-4bc8-b743-b97c49d27e8b" />
+			<ee:transform doc:name="Transform Message" doc:id="4182b370-3f9c-4812-8546-5dac37d4e6dc">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message : "Try after 24 hours" + payload as String
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		</on-error-continue>
+		<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="2058efc9-a177-4fd9-a769-5de442de0e3f" type="ANY">
+			<set-payload value="#[error.description]" doc:name="Set Payload" doc:id="056fc4a0-e13c-4804-830c-d5d094839cbd" />
+			<ee:transform doc:name="Transform Message" doc:id="046518f0-218f-4dce-890a-0a311bab506e" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		</on-error-continue>
+	</error-handler>
+</mule>

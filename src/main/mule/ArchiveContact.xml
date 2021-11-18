@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<flow name="ArchiveContactFlow" doc:id="be8950cb-0cca-40d7-b8b7-e414afdb7716" >
+		<salesforce:deleted-object-listener doc:name="On Deleted Object" doc:id="85f5b86a-e65d-4e56-a065-1e02a90d4d22" config-ref="Salesforce_Config" objectType="Contact">
+			<scheduling-strategy >
+				<fixed-frequency />
+			</scheduling-strategy>
+		</salesforce:deleted-object-listener>
+		<set-payload value="#[payload]" doc:name="Set Payload" doc:id="23bec132-ed5b-4527-9965-c9f097f5827c" />
+		<foreach doc:name="For Each" doc:id="d92f0352-5a9e-486b-a741-e8959c900b61" >
+			<ee:transform doc:name="Transform Message" doc:id="5022dfab-f136-4886-a4ba-b556a2cb3958" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<db:bulk-update doc:name="Bulk update" doc:id="9cb34894-6dd7-4696-9a27-a0c596ae6b9e" config-ref="Database_Config">
+				<db:sql ><![CDATA[UPDATE BH_DContact SET id = :ID WHERE id = id]]></db:sql>
+			</db:bulk-update>
+			<logger level="INFO" doc:name="Logger" doc:id="0ceaa9c0-d1c0-4396-b51f-6fe3e09282d3" />
+		</foreach>
+		<logger level="INFO" doc:name="Logger" doc:id="1c0141c5-859a-40ab-8cce-5d94de40ba06" message="#[payload]"/>
+	</flow>
+</mule>

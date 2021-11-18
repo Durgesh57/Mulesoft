@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<flow name="ArchiveAccountFlow" doc:id="1faa4ace-0ace-4470-b45d-9cce6ba7c7e3" >
+		<salesforce:deleted-object-listener objectType="Account" doc:name="On Deleted Object" doc:id="4163d5a5-3ddb-4576-b0d2-603e937a4c78" config-ref="Salesforce_Config">
+			<scheduling-strategy >
+				<fixed-frequency />
+			</scheduling-strategy>
+		</salesforce:deleted-object-listener>
+		<set-payload value="#[output application/json&#10;---&#10;payload]" doc:name="Set Payload" doc:id="087d7caa-f909-4a0f-bef0-3df911cdb152" />
+		<foreach doc:name="For Each" doc:id="45268831-705e-4abb-bce1-46f6054997be" >
+			<ee:transform doc:name="Transform Message" doc:id="81b6f691-68ad-4bbd-bc1b-a852738a4143" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	ID : vars.rootMessage.payload.Id
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<db:update doc:name="Update" doc:id="77a660b7-6650-4c54-b494-6aa4b4546fab" config-ref="Database_Config">
+				<db:sql ><![CDATA[UPDATE BH_DContact SET id = :ID WHERE id = id]]></db:sql>
+				<db:input-parameters ><![CDATA[#[payload]]]></db:input-parameters>
+			</db:update>
+			<logger level="INFO" doc:name="Logger" doc:id="3cb9187a-a5fc-4a9e-9b82-a5fe140ca38e" message="#[payload]"/>
+		</foreach>
+		<logger level="INFO" doc:name="Logger" doc:id="410d4f94-9399-439d-8d51-7a4440db8821" message="#[payload]"/>
+	</flow>
+</mule>

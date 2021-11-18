@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+	<flow name="Contact_MySQL_To_SFFlow" doc:id="82fd8165-b9ef-4676-8de1-06a49fda447e" >
+		<http:listener doc:name="Listener" doc:id="708654de-6c1e-465d-8ec8-d8525988923e" config-ref="HTTP_Listener_config" path="contactmysql"/>
+		<db:select doc:name="Select" doc:id="c32f08ec-6318-40d5-aca3-dbcfc9629e83" config-ref="Database_Config">
+			<db:sql ><![CDATA[SELECT * FROM BH_DContact]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="f209d6d7-32c4-4ecd-90f7-a94861bce5c7" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload map ( payload01 , indexOfPayload01 ) -> {
+	Emaill__c: payload01.email,
+	AccountID__c: payload01.clientCorporationID,
+	ID__c: payload01.externalID,
+	OwnerId__c: payload01.recruiterUserID,
+	Name__c: payload01.name,
+	External_Pulse_ID__c: payload01.id
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="7ab4678c-fd9b-433a-9522-8fc3eaf4f78f" message="#[payload]"/>
+		<salesforce:create doc:name="Create" doc:id="5edb31b5-adbc-452c-8698-ead6d0a02aec" config-ref="Salesforce_Config" type="Contact" />
+		<logger level="INFO" doc:name="Logger" doc:id="fc909a7b-fc81-457e-8afb-21b86cac88f7" message="#[payload]"/>
+	</flow>
+</mule>
