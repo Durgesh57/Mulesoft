@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<file:config name="File_Config" doc:name="File Config" doc:id="0ca5a784-d896-4346-b7b8-fdc991b86932" >
+		<file:connection workingDir="C:\Users\info\Desktop" />
+	</file:config>
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="fdc6109e-fa3b-454b-b980-4f6ae030299f" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<file:config name="File_Config1" doc:name="File Config" doc:id="702512f7-bbec-4014-b834-45332fd6e072" >
+		<file:connection workingDir="C:\Users\info\Desktop" />
+	</file:config>
+	<flow name="dataweaveFlow" doc:id="bddf07e0-c7d2-428b-b698-cb3232d1e64b" >
+		<http:listener doc:name="Listener" doc:id="c83a778d-30c5-4160-a217-40909b6b23af" config-ref="HTTP_Listener_config" path="csv"/>
+		<file:read doc:name="Read" doc:id="3d66f35c-110a-44b2-b841-d81eef134211" config-ref="File_Config" path="C:\Users\info\Desktop\data.csv"/>
+		<ee:transform doc:name="Transform Message" doc:id="c6dd70af-fb28-4ecc-8a77-41e90de3d38d" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="32a00c3c-41e0-43ca-bb6a-3ca918d536d4">
+			<ee:transform doc:name="Transform Message" doc:id="997a7d06-fdcc-4f09-bda6-26765d0a9a08">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="dataVar"><![CDATA[%dw 2.0
+output application/json
+
+fun check(condition)= if ((payload.Name != "") and (payload.RelatedRecordId != ""))
+ [vars.dataVar] ++ [payload]
+  else
+vars.dataVar
+---
+check(payload)]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+			<logger level="INFO" doc:name="Logger" doc:id="34aa1d67-2283-4a15-9ca3-7bf487d8b974" message="#[vars.dataVar]" />
+		</foreach>
+		<set-payload value="#[vars.dataVar]" doc:name="Set Payload" doc:id="c332550f-8475-4108-8331-226e5160407a" />
+		<ee:transform doc:name="Transform Message" doc:id="40c04186-829f-40a7-9eff-b20b2f7e9e03" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
